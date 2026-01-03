@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Loader2, Sparkles, Wand2 } from "lucide-react";
-import { useActions } from "ai/rsc";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -44,9 +43,6 @@ const FormSchema = z.object({
 
 export function GeneratorView() {
     const { toast } = useToast();
-    const { generateCaptionAndHashtags: generateAction } = useActions({
-        generateCaptionAndHashtags
-    });
     const [generation, setGeneration] = useState<AICaptionHashtagGenerationOutput | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -64,7 +60,7 @@ export function GeneratorView() {
         setIsLoading(true);
         setGeneration(null);
         try {
-            const result = await generateAction(data);
+            const result = await generateCaptionAndHashtags(data);
             setGeneration(result);
             toast({
                 title: "Content Generated!",

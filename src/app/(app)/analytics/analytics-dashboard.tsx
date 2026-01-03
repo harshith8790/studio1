@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Loader2, Sparkles, Trash2, PlusCircle, Wand2, ArrowDown, ArrowUp } from "lucide-react";
-import { useActions } from "ai/rsc";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -39,9 +38,6 @@ type PostWithAnalysis = z.infer<typeof PostSchema> & { analysis?: AnalyzePostPer
 
 export function AnalyticsDashboard() {
     const { toast } = useToast();
-    const { analyzePostPerformance: analyzeAction } = useActions({
-        analyzePostPerformance
-    });
     const [posts, setPosts] = useState<PostWithAnalysis[]>([
         { postId: 'post-1', content: 'Just launched my new video on AI in content creation! Check it out! #AI #ContentCreation', engagement: 1200, reach: 15000 },
         { postId: 'post-2', content: 'Quick tip: Use natural light for your videos. It makes a huge difference. #VideoTips #CreatorLife', engagement: 2500, reach: 22000 },
@@ -64,7 +60,7 @@ export function AnalyticsDashboard() {
         setIsLoading(true);
         try {
             const currentPosts = form.getValues('posts');
-            const result = await analyzeAction({
+            const result = await analyzePostPerformance({
                 platform: "Instagram", // Mocked
                 contentNiche: "Tech & AI", // Mocked
                 recentPosts: currentPosts,

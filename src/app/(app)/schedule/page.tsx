@@ -1,279 +1,159 @@
+
 "use client";
 
 import { useState } from "react";
-import { format, addMonths, subMonths } from "date-fns";
+import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, subWeeks, addWeeks } from "date-fns";
 import {
   ChevronLeft,
   ChevronRight,
-  Activity,
-  Lightbulb,
-  Tag,
-  Target,
-  FileText,
-  Calendar as CalendarIcon,
-  Save,
-  Loader2,
+  CheckCircle2,
+  XCircle,
+  Clock,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-// Mock data representing a week's worth of scheduled content
+// Mock data representing scheduled content with status
 const scheduledContent = [
   {
-    date: new Date(2024, 6, 22),
-    platform: "Instagram",
-    title: "Behind-the-Scenes: My Editing Workflow",
-    description:
-      "A short Reel showcasing the tools and techniques I use to edit my videos. Quick cuts, engaging music, and a satisfying before-and-after.",
-    hashtags: ["VideoEditing", "CreatorLife", "Workflow", "Tech"],
-    strategicRationale:
-      "Builds authority and provides value by teaching a skill. The BTS format fosters a stronger connection with the audience.",
-    growthGoal: "Engagement",
-    notes: "Remember to add a call-to-action to the comments.",
+    date: new Date(2024, 0, 1), // Jan 1
+    title: "Workout",
+    status: "posted",
   },
   {
-    date: new Date(2024, 6, 24),
-    platform: "LinkedIn",
-    title: "The Future of AI in Content Creation",
-    description:
-      "A thoughtful post on how AI tools are changing the landscape for creators, from ideation to production. Posing a question at the end to drive discussion.",
-    hashtags: ["AI", "ContentCreation", "FutureOfTech", "Marketing"],
-    strategicRationale:
-      "Positions you as a forward-thinker in the industry. LinkedIn is ideal for professional topics and encourages thoughtful comments.",
-    growthGoal: "Reach",
-    notes: ""
+    date: new Date(2024, 0, 2), // Jan 2
+    title: "Morning rou...",
+    status: "posted",
+  },
+    {
+    date: new Date(2024, 0, 3), // Jan 3
+    title: "Quick tips",
+    status: "planned",
   },
   {
-    date: new Date(2024, 6, 26),
-    platform: "X",
-    title: "Quick Poll: What's Your Biggest Creator Challenge?",
-    description:
-      "A simple poll asking followers to vote on their biggest struggle: a) Finding ideas, b) Staying consistent, c) Growing an audience, d) Monetization.",
-    hashtags: ["CreatorEconomy", "SocialMedia", "AudienceGrowth"],
-    strategicRationale:
-      "A low-effort, high-engagement post. The poll encourages interaction and provides valuable audience research for future content.",
-    growthGoal: "Engagement",
-    notes: ""
+    date: new Date(2023, 11, 31), // Dec 31
+    title: "Recipe share",
+    status: "missed",
   },
 ];
 
 type ScheduledPost = (typeof scheduledContent)[0];
+type Status = "posted" | "planned" | "missed";
+
+
+const statusStyles: { [key in Status]: { icon: React.ReactNode, badge: string, text: string } } = {
+    posted: {
+        icon: <CheckCircle2 className="h-4 w-4" />,
+        badge: "bg-green-100 text-green-800 border-green-200",
+        text: "text-green-800"
+    },
+    planned: {
+        icon: <Clock className="h-4 w-4" />,
+        badge: "bg-blue-100 text-blue-800 border-blue-200",
+        text: "text-blue-800"
+    },
+    missed: {
+        icon: <XCircle className="h-4 w-4" />,
+        badge: "bg-red-100 text-red-800 border-red-200",
+        text: "text-red-800"
+    }
+}
+
 
 export default function SchedulePage() {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
-  
-  const selectedContent = scheduledContent.find(
-    (d) => selectedDate && format(d.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
-  );
+  const [currentDate, setCurrentDate] = useState(new Date(2024, 0, 1));
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2024, 0, 2));
 
-  const [notes, setNotes] = useState(selectedContent?.notes || "");
 
-  const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
-    if (date) {
-      setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
-      const content = scheduledContent.find(d => format(d.date, "yyyy-MM-dd") === format(date, "yyyy-MM-dd"));
-      setNotes(content?.notes || "");
-    }
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+  const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+  const goToPreviousWeek = () => {
+    setCurrentDate(subWeeks(currentDate, 1));
   };
 
-  const handleSaveNotes = async () => {
-    setIsSaving(true);
-    // Mock saving notes
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Saving notes for", selectedDate, ":", notes);
-    toast({
-        title: "Notes Saved!",
-        description: `Your notes for ${selectedDate ? format(selectedDate, "PPP") : ""} have been saved.`,
-    });
-    setIsSaving(false);
-  }
+  const goToNextWeek = () => {
+    setCurrentDate(addWeeks(currentDate, 1));
+  };
 
-  const scheduledDays = scheduledContent.map((item) => item.date);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in-0 zoom-in-95">
-      <div>
-        <h1 className="text-2xl font-semibold md:text-3xl">
-          Content Schedule
-        </h1>
-        <p className="text-muted-foreground">
-          Plan, view, and analyze your upcoming content.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+            <h1 className="text-2xl font-semibold md:text-3xl">
+            Content Calendar
+            </h1>
+        </div>
+        <div className="flex items-center gap-4">
+            <span className="text-md font-semibold text-foreground">
+                {format(weekStart, "MMM d")} - {format(weekEnd, "MMM d, yyyy")}
+            </span>
+             <div className="flex items-center gap-1">
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPreviousWeek}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextWeek}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-1">
-          <Card>
-            <CardContent className="p-0">
-               <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-                month={currentMonth}
-                onMonthChange={setCurrentMonth}
-                className="w-full"
-                components={{
-                  Caption: ({ displayMonth }) => (
-                    <div className="flex items-center justify-between px-4 py-2">
-                       <h2 className="text-lg font-semibold">{format(displayMonth, 'MMMM yyyy')}</h2>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ),
-                }}
-                modifiers={{ scheduled: scheduledDays }}
-                modifiersStyles={{
-                  scheduled: {
-                    border: "2px solid hsl(var(--primary))",
-                    borderRadius: "var(--radius)",
-                  },
-                }}
-              />
-            </CardContent>
-          </Card>
-        </div>
+      <div className="grid grid-cols-7 gap-2">
+        {days.map((day) => {
+            const dayContent = scheduledContent.filter(
+                (item) => format(item.date, "yyyy-MM-dd") === format(day, "yyyy-MM-dd")
+            );
+            const isSelected = format(day, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
 
-        <div className="lg:col-span-2">
-          <Card className="min-h-[445px] flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5 text-primary" />
-                Daily Dose of Post Analysis
-              </CardTitle>
-              <CardDescription>
-                {selectedDate
-                  ? `Analysis for ${format(selectedDate, "PPP")}`
-                  : "Select a date to see the analysis"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow flex flex-col">
-              {selectedContent ? (
-                <ScrollArea className="h-[300px] pr-4">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {selectedContent.title}
-                      </h3>
-                      <Badge variant="secondary" className="mt-1">
-                        For {selectedContent.platform}
-                      </Badge>
-                    </div>
-
-                    <div className="space-y-4 text-sm">
-                      <div className="flex items-start gap-3">
-                        <FileText className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <p>
-                          <span className="font-semibold text-foreground">
-                            Description:
-                          </span>{" "}
-                          {selectedContent.description}
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Tag className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <div className="flex flex-wrap gap-1">
-                          <span className="font-semibold text-foreground">
-                            Hashtags:
-                          </span>
-                          {selectedContent.hashtags.map((tag) => (
-                            <Badge key={tag} variant="outline">
-                              #{tag}
-                            </Badge>
-                          ))}
+            return (
+                <Card 
+                    key={day.toString()} 
+                    onClick={() => setSelectedDate(day)}
+                    className={cn(
+                        "cursor-pointer transition-all hover:bg-muted/50 min-h-[120px]",
+                        isSelected && "border-primary ring-2 ring-primary"
+                    )}
+                >
+                    <CardContent className="p-3">
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">{format(day, "eee")}</span>
+                            <span className={cn("font-semibold", isSelected && "text-primary")}>{format(day, "d")}</span>
                         </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Lightbulb className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <p>
-                          <span className="font-semibold text-foreground">
-                            Strategic Rationale:
-                          </span>{" "}
-                          {selectedContent.strategicRationale}
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Target className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <p>
-                          <span className="font-semibold text-foreground">
-                            Growth Goal:
-                          </span>{" "}
-                          <Badge variant="default">
-                            {selectedContent.growthGoal}
-                          </Badge>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center rounded-lg border border-dashed text-center">
-                  <Activity className="h-10 w-10 text-muted-foreground/50" />
-                  <h3 className="mt-4 text-lg font-semibold">
-                    {selectedDate ? "No Content Scheduled" : "Select a Day"}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {selectedDate
-                      ? "There's no post analysis for this day."
-                      : "Pick a date from the calendar to see the analysis."}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-            <div className="p-6 pt-0">
-                <Separator className="my-4" />
-                <div className="space-y-2">
-                    <label htmlFor="notes" className="text-sm font-medium">Notes for this day</label>
-                    <Textarea 
-                        id="notes"
-                        placeholder="Add your notes, ideas, or to-dos here..." 
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        disabled={!selectedDate}
-                    />
-                </div>
-                <div className="flex justify-end mt-4">
-                    <Button onClick={handleSaveNotes} disabled={!selectedDate || isSaving}>
-                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Save Notes
-                    </Button>
-                </div>
+                        <div className="mt-2 space-y-1">
+                            {dayContent.map((item) => {
+                                const styles = statusStyles[item.status as Status];
+                                return (
+                                    <Badge key={item.title} variant="outline" className={cn("w-full justify-start gap-2 truncate py-1 text-xs font-medium", styles.badge, styles.text)}>
+                                        {styles.icon}
+                                        <span className="truncate">{item.title}</span>
+                                    </Badge>
+                                )
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
+            )
+        })}
+      </div>
+      
+      <div className="flex justify-center items-center gap-6 text-sm">
+        {Object.entries(statusStyles).map(([status, { icon, text }]) => (
+            <div key={status} className="flex items-center gap-2">
+                <span className={cn(text)}>{icon}</span>
+                <span className="capitalize text-muted-foreground">{status}</span>
             </div>
-          </Card>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
+

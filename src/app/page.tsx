@@ -29,7 +29,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button size="lg" asChild>
-                <Link href="/dashboard">
+                <Link href="/signup">
                   Start Chatting Free <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

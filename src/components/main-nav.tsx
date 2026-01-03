@@ -31,6 +31,11 @@ const links = [
     icon: Sparkles,
   },
   {
+    href: "/schedule",
+    label: "Schedule",
+    icon: Calendar,
+  },
+  {
     href: "/analytics",
     label: "Analytics",
     icon: BarChart,

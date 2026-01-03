@@ -14,6 +14,8 @@ import {
   Flame,
   Sparkles,
   HeartPulse,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import Link from 'next/link';
 import {

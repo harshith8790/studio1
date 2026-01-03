@@ -41,6 +41,132 @@
         "growthGoal"
       ]
     },
+    "Creator": {
+      "title": "Creator",
+      "description": "Represents a content creator's public profile for collaboration matching.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Creator's display name."
+        },
+        "niche": {
+          "type": "string",
+          "description": "Primary content niche (e.g., Tech, Fitness)."
+        },
+        "audienceType": {
+          "type": "string",
+          "description": "Primary audience demographic (e.g., Students, Professionals)."
+        },
+        "primaryPlatform": {
+          "type": "string",
+          "description": "Main platform for content (e.g., YouTube, Instagram)."
+        },
+        "followerRange": {
+          "type": "string",
+          "description": "Approximate number of followers (e.g., '10k-50k')."
+        },
+        "contentStrengths": {
+          "type": "array",
+          "description": "List of the creator's key content skills (e.g., 'Video Editing', 'Storytelling').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "businessGoals": {
+          "type": "array",
+          "description": "Creator's primary business objectives.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Growth",
+              "Monetization",
+              "Brand building",
+              "Course creation"
+            ]
+          }
+        },
+        "collaborationInterests": {
+          "type": "array",
+          "description": "Types of collaborations the creator is open to.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Co-content",
+              "Co-product",
+              "Affiliate / revenue sharing",
+              "Community building"
+            ]
+          }
+        },
+        "availability": {
+          "type": "boolean",
+          "description": "Indicates if the creator is currently open to collaboration requests."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the creator profile was created."
+        }
+      },
+      "required": [
+        "name",
+        "niche",
+        "audienceType",
+        "primaryPlatform",
+        "followerRange",
+        "contentStrengths",
+        "businessGoals",
+        "collaborationInterests",
+        "availability",
+        "createdAt"
+      ]
+    },
+    "CollaborationRequest": {
+      "title": "CollaborationRequest",
+      "description": "Represents a collaboration request sent from one creator to another.",
+      "type": "object",
+      "properties": {
+        "senderId": {
+          "type": "string",
+          "description": "The user ID of the creator sending the request."
+        },
+        "receiverId": {
+          "type": "string",
+          "description": "The user ID of the creator receiving the request."
+        },
+        "matchScore": {
+          "type": "number",
+          "description": "The AI-calculated match score between the two creators."
+        },
+        "suggestedCollabType": {
+          "type": "string",
+          "description": "The AI-suggested type of collaboration."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "accepted",
+            "rejected"
+          ],
+          "description": "The current status of the collaboration request."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the request was sent."
+        }
+      },
+      "required": [
+        "senderId",
+        "receiverId",
+        "matchScore",
+        "suggestedCollabType",
+        "status",
+        "createdAt"
+      ]
+    },
     "BrandProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "BrandProfile",
@@ -195,41 +321,6 @@
         "strategicRationale",
         "hashtags"
       ]
-    },
-    "CollaborationSuggestion": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CollaborationSuggestion",
-      "type": "object",
-      "description": "Represents a suggested creator for collaboration.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the collaboration suggestion."
-        },
-        "requestingUserId": {
-          "type": "string",
-          "description": "Reference to User initiating the collaboration request. (Relationship: User 1:N CollaborationSuggestion - Initiated)"
-        },
-        "suggestedUserId": {
-          "type": "string",
-          "description": "Reference to User being suggested for collaboration. (Relationship: User 1:N CollaborationSuggestion - Suggested)"
-        },
-        "status": {
-          "type": "string",
-          "description": "The status of the collaboration request (e.g., pending, accepted, rejected)."
-        },
-        "requestMessage": {
-          "type": "string",
-          "description": "Message sent with the collaboration request."
-        }
-      },
-      "required": [
-        "id",
-        "requestingUserId",
-        "suggestedUserId",
-        "status",
-        "requestMessage"
-      ]
     }
   },
   "auth": {
@@ -252,6 +343,38 @@
             {
               "name": "userId",
               "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/creators/{creatorId}",
+        "definition": {
+          "entityName": "Creator",
+          "schema": {
+            "$ref": "#/backend/entities/Creator"
+          },
+          "description": "Stores public profiles for content creators available for collaboration.",
+          "params": [
+            {
+              "name": "creatorId",
+              "description": "The unique identifier of the creator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/collaboration_requests/{requestId}",
+        "definition": {
+          "entityName": "CollaborationRequest",
+          "schema": {
+            "$ref": "#/backend/entities/CollaborationRequest"
+          },
+          "description": "Stores collaboration requests between creators.",
+          "params": [
+            {
+              "name": "requestId",
+              "description": "The unique identifier of the collaboration request."
             }
           ]
         }
@@ -331,24 +454,8 @@
             }
           ]
         }
-      },
-      {
-        "path": "/collaborationSuggestions/{collaborationSuggestionId}",
-        "definition": {
-          "entityName": "CollaborationSuggestion",
-          "schema": {
-            "$ref": "#/backend/entities/CollaborationSuggestion"
-          },
-          "description": "Stores collaboration suggestions. Includes `requestingUserId` and `suggestedUserId`.",
-          "params": [
-            {
-              "name": "collaborationSuggestionId",
-              "description": "The unique identifier of the collaboration suggestion."
-            }
-          ]
-        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data and associated content are organized under user-specific paths for private data, enabling simple and secure rules based on `request.auth.uid`.  Denormalization is employed to maintain authorization independence, specifically within the ContentCalendarEntry collection. This design facilitates secure `list` operations (QAPs) through structural segregation and path-based ownership.\n\n*   `/users/{userId}`: This path stores user profiles.  Rules here ensure only the authenticated user can access their own profile.\n*   `/users/{userId}/brandProfiles/{brandProfileId}`:  Brand profiles are stored under the user who owns them, providing straightforward ownership-based security.\n*   `/users/{userId}/contentLogs/{contentLogId}`: Content logs, associated with individual users, are stored under their respective user ID.\n*   `/users/{userId}/contentCalendarEntries/{contentCalendarEntryId}`: Content calendar entries are stored under the user and include `userId` and `contentLogId` for easy querying and retrieval. This design uses path-based ownership.\n*   `/trends/{trendId}`: Trends are global and accessible.  Security rules should limit write access to authorized users only (e.g., admins).\n*   `/collaborationSuggestions/{collaborationSuggestionId}`: Collaboration suggestions are stored at the root level. They include `requestingUserId` and `suggestedUserId` fields. Security rules ensure only the requesting user can modify suggestions they created, and the suggested user can accept or reject the collaboration."
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data and associated content are organized under user-specific paths for private data, enabling simple and secure rules based on `request.auth.uid`. The new `creators` collection stores public-facing profiles for collaboration, readable by any authenticated user if `availability` is true. The `collaboration_requests` collection is at the root to manage interactions between users, with security rules ensuring only the sender or receiver can access a specific request, thus protecting privacy while enabling the feature."
   }
 }

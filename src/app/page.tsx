@@ -6,26 +6,12 @@ import { Stars } from "@/components/stars";
 import { ArrowRight, PlayCircle, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const navLinks = [
-  { name: "Home", href: "#" },
-  { name: "Features", href: "#" },
-  { name: "How It Works", href: "#" },
-  { name: "Pricing", href: "#" },
-];
-
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <Stars />
       <header className="fixed top-0 left-0 right-0 z-50 flex h-20 items-center justify-between px-4 sm:px-8 md:px-16 bg-background/80 backdrop-blur-sm">
         <Logo />
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map(link => (
-            <Link key={link.name} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              {link.name}
-            </Link>
-          ))}
-        </nav>
         <div className="flex items-center gap-2">
           <Button variant="ghost" asChild>
              <Link href="/dashboard">Login</Link>

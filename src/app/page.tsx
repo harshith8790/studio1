@@ -19,13 +19,13 @@ export default function LandingPage() {
           <div className="flex flex-col gap-6 items-center text-center">
             <Badge variant="outline" className="border-primary/50 text-primary py-1 px-3">
               <Sparkles className="mr-2 h-4 w-4" />
-              AI-Powered Marketing Agent
+              AI-Powered Creator Coach
             </Badge>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">
-              Your Personal <span className="text-primary">AI Marketing</span> Assistant
+              Your Personal <span className="text-primary">AI Creator</span> Coach
             </h1>
             <p className="max-w-xl text-lg text-muted-foreground">
-              Meet CTK — the intelligent agent that helps entrepreneurs and content creators craft compelling marketing strategies, generate content, and grow their audience 24/7.
+              Meet CTK — the intelligent agent that helps entrepreneurs and content creators craft compelling strategies, generate content, and grow their audience 24/7.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button size="lg" asChild>

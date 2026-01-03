@@ -55,9 +55,6 @@ export default function LandingPage() {
                   Start Chatting Free <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline">
-                <PlayCircle className="mr-2 h-4 w-4" /> Watch Demo
-              </Button>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Wand2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export const metadata = {
     title: "Trend Radar | Content Spark",

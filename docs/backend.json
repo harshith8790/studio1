@@ -1,0 +1,354 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Content Spark application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "platform": {
+          "type": "string",
+          "description": "The user's primary content platform (e.g., Instagram, YouTube)."
+        },
+        "contentNiche": {
+          "type": "string",
+          "description": "The user's content niche (e.g., fitness, travel, tech)."
+        },
+        "growthGoal": {
+          "type": "string",
+          "description": "The user's primary growth goal (e.g., reach, engagement, consistency)."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "displayName",
+        "platform",
+        "contentNiche",
+        "growthGoal"
+      ]
+    },
+    "BrandProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BrandProfile",
+      "type": "object",
+      "description": "Represents the user's brand profile, including tone, target audience, and mission.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the brand profile."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:1 BrandProfile)"
+        },
+        "brandTone": {
+          "type": "string",
+          "description": "The overall tone of the brand (e.g., professional, funny, casual)."
+        },
+        "targetAudience": {
+          "type": "string",
+          "description": "Description of the brand's target audience."
+        },
+        "coreMission": {
+          "type": "string",
+          "description": "The core mission statement of the brand."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "brandTone",
+        "targetAudience",
+        "coreMission"
+      ]
+    },
+    "ContentLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ContentLog",
+      "type": "object",
+      "description": "Represents a log of generated content, including the raw idea, AI-generated post, and image prompt.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the content log."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ContentLog)"
+        },
+        "rawIdea": {
+          "type": "string",
+          "description": "The user's initial raw idea for the content."
+        },
+        "aiGeneratedPost": {
+          "type": "string",
+          "description": "The AI-generated social media post in JSON format, containing strategic rationale, platform-optimized text, and hashtags."
+        },
+        "imagePrompt": {
+          "type": "string",
+          "description": "The AI-generated image prompt for the post."
+        },
+        "platform": {
+          "type": "string",
+          "description": "The platform the content was generated for (e.g., LinkedIn, Instagram, X)."
+        },
+        "createdDate": {
+          "type": "string",
+          "description": "Date and time the content was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "rawIdea",
+        "aiGeneratedPost",
+        "imagePrompt",
+        "platform",
+        "createdDate"
+      ]
+    },
+    "ContentCalendarEntry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ContentCalendarEntry",
+      "type": "object",
+      "description": "Represents an entry in the content calendar, including the date, content log, and platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the content calendar entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ContentCalendarEntry)"
+        },
+        "contentLogId": {
+          "type": "string",
+          "description": "Reference to ContentLog. (Relationship: ContentCalendarEntry 1:1 ContentLog)"
+        },
+        "scheduledDate": {
+          "type": "string",
+          "description": "The date the content is scheduled to be posted.",
+          "format": "date-time"
+        },
+        "platform": {
+          "type": "string",
+          "description": "The platform the content is scheduled for (e.g., LinkedIn, Instagram, X)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "contentLogId",
+        "scheduledDate",
+        "platform"
+      ]
+    },
+    "Trend": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Trend",
+      "type": "object",
+      "description": "Represents a trending topic within a specific niche.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the trend."
+        },
+        "niche": {
+          "type": "string",
+          "description": "The niche this trend belongs to (e.g., fitness, travel, tech)."
+        },
+        "topic": {
+          "type": "string",
+          "description": "The trending topic itself."
+        },
+        "strategicRationale": {
+          "type": "string",
+          "description": "A strategic explanation of why this trend is relevant and how to capitalize on it."
+        },
+        "hashtags": {
+          "type": "array",
+          "description": "Array of relevant hashtags for the trend.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "niche",
+        "topic",
+        "strategicRationale",
+        "hashtags"
+      ]
+    },
+    "CollaborationSuggestion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CollaborationSuggestion",
+      "type": "object",
+      "description": "Represents a suggested creator for collaboration.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the collaboration suggestion."
+        },
+        "requestingUserId": {
+          "type": "string",
+          "description": "Reference to User initiating the collaboration request. (Relationship: User 1:N CollaborationSuggestion - Initiated)"
+        },
+        "suggestedUserId": {
+          "type": "string",
+          "description": "Reference to User being suggested for collaboration. (Relationship: User 1:N CollaborationSuggestion - Suggested)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the collaboration request (e.g., pending, accepted, rejected)."
+        },
+        "requestMessage": {
+          "type": "string",
+          "description": "Message sent with the collaboration request."
+        }
+      },
+      "required": [
+        "id",
+        "requestingUserId",
+        "suggestedUserId",
+        "status",
+        "requestMessage"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles.  Only the authenticated user can access their own profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/brandProfiles/{brandProfileId}",
+        "definition": {
+          "entityName": "BrandProfile",
+          "schema": {
+            "$ref": "#/backend/entities/BrandProfile"
+          },
+          "description": "Stores brand profiles associated with a user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "brandProfileId",
+              "description": "The unique identifier of the brand profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/contentLogs/{contentLogId}",
+        "definition": {
+          "entityName": "ContentLog",
+          "schema": {
+            "$ref": "#/backend/entities/ContentLog"
+          },
+          "description": "Stores content logs associated with a user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "contentLogId",
+              "description": "The unique identifier of the content log."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/contentCalendarEntries/{contentCalendarEntryId}",
+        "definition": {
+          "entityName": "ContentCalendarEntry",
+          "schema": {
+            "$ref": "#/backend/entities/ContentCalendarEntry"
+          },
+          "description": "Stores content calendar entries associated with a user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "contentCalendarEntryId",
+              "description": "The unique identifier of the content calendar entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/trends/{trendId}",
+        "definition": {
+          "entityName": "Trend",
+          "schema": {
+            "$ref": "#/backend/entities/Trend"
+          },
+          "description": "Stores global trends.",
+          "params": [
+            {
+              "name": "trendId",
+              "description": "The unique identifier of the trend."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/collaborationSuggestions/{collaborationSuggestionId}",
+        "definition": {
+          "entityName": "CollaborationSuggestion",
+          "schema": {
+            "$ref": "#/backend/entities/CollaborationSuggestion"
+          },
+          "description": "Stores collaboration suggestions. Includes `requestingUserId` and `suggestedUserId`.",
+          "params": [
+            {
+              "name": "collaborationSuggestionId",
+              "description": "The unique identifier of the collaboration suggestion."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data and associated content are organized under user-specific paths for private data, enabling simple and secure rules based on `request.auth.uid`.  Denormalization is employed to maintain authorization independence, specifically within the ContentCalendarEntry collection. This design facilitates secure `list` operations (QAPs) through structural segregation and path-based ownership.\n\n*   `/users/{userId}`: This path stores user profiles.  Rules here ensure only the authenticated user can access their own profile.\n*   `/users/{userId}/brandProfiles/{brandProfileId}`:  Brand profiles are stored under the user who owns them, providing straightforward ownership-based security.\n*   `/users/{userId}/contentLogs/{contentLogId}`: Content logs, associated with individual users, are stored under their respective user ID.\n*   `/users/{userId}/contentCalendarEntries/{contentCalendarEntryId}`: Content calendar entries are stored under the user and include `userId` and `contentLogId` for easy querying and retrieval. This design uses path-based ownership.\n*   `/trends/{trendId}`: Trends are global and accessible.  Security rules should limit write access to authorized users only (e.g., admins).\n*   `/collaborationSuggestions/{collaborationSuggestionId}`: Collaboration suggestions are stored at the root level. They include `requestingUserId` and `suggestedUserId` fields. Security rules ensure only the requesting user can modify suggestions they created, and the suggested user can accept or reject the collaboration."
+  }
+}

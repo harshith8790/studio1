@@ -1,0 +1,234 @@
+/**
+ * # Firestore Security Rules
+ *
+ * ## Core Philosophy
+ * This ruleset enforces a strict user-ownership model. All user-generated content,
+ * such as profiles, brand information, and content logs, is stored in subcollections
+ * under that user's unique ID. This ensures that users can only access their own data,
+ * providing strong data privacy by default.
+ *
+ * ## Data Structure
+ * - `/users/{userId}`: The root path for all user-specific data.
+ * - `/trends/{trendId}`: A top-level collection for globally readable trend data.
+ * - `/collaborationSuggestions/{collaborationSuggestionId}`: A top-level collection
+ *   for managing collaboration requests between specific users.
+ *
+ * ## Key Security Decisions
+ * - **User Isolation**: All data under `/users/{userId}` is strictly private to the
+ *   owning user. Listing all users is prohibited.
+ * - **Public Read-Only Data**: The `/trends` collection is publicly readable by anyone
+ *   but is configured to be writable only by an administrator (currently disabled
+ *   pending schema updates).
+ * - **Collaborative Data**: The `/collaborationSuggestions` collection implements a
+ *   shared access model where only the involved parties (requester and suggested user)
+ *   can read the document. Permissions for modification and deletion are granularly
+ *   assigned to each party. General listing is disabled to protect privacy.
+ *
+ * ## Denormalization for Authorization
+ * - Authorization logic is kept simple and performant by ensuring that any data
+ *   needed for a security decision is located on the document being secured.
+ * - For example, documents in user subcollections (e.g., `brandProfiles`) contain a
+ *   `userId` field, which is validated against the path to ensure relational integrity
+ *   without needing extra database reads.
+ *
+ * ## Structural Segregation
+ * - The ruleset uses separate top-level collections to segregate private user data
+ *   (`/users`) from public (`/trends`) and shared (`/collaborationSuggestions`) data.
+ *   This is a more secure and performant approach than mixing data types within a
+ *   single collection.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+    // --------------------------------
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the primary function for validating ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+    
+    /**
+     * Validates that the userId field in a new document matches the owner's UID.
+     * Ensures data integrity on creation.
+     */
+    function isUserOwnedDoc(userId) {
+      return request.resource.data.userId == userId;
+    }
+    
+    /**
+     * Enforces immutability of the userId field during updates.
+     */
+    function userIdIsImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    // User Data Rules
+    // --------------------------------
+
+    /**
+     * @description Controls access to user profile documents. A user can create their
+     *              own profile, and read, update, or delete it. No other user can
+     *              access it, and listing all users is forbidden.
+     * @path        /users/{userId}
+     * @allow       (create) A new user signs up and creates their own profile document.
+     *              auth.uid: "user_abc", path: "/users/user_abc"
+     * @deny        (get) A user tries to read another user's profile.
+     *              auth.uid: "user_xyz", path: "/users/user_abc"
+     * @principle   Enforces strict document ownership and allows self-creation of a
+     *              user's root profile.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id && request.resource.data.email == resource.data.email;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Controls access to a user's brand profile. Only the owning user
+       *              can perform any action on their brand profile documents.
+       * @path        /users/{userId}/brandProfiles/{brandProfileId}
+       * @allow       (create) The owner creates a new brand profile.
+       *              auth.uid: "user_abc", path: "/users/user_abc/brandProfiles/..."
+       * @deny        (list) Another user tries to list brand profiles.
+       *              auth.uid: "user_xyz", path: "/users/user_abc/brandProfiles"
+       * @principle   Restricts access to a user's own data tree using path-based
+       *              ownership.
+       */
+      match /brandProfiles/{brandProfileId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isUserOwnedDoc(userId);
+        allow update: if isExistingOwner(userId) && userIdIsImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Controls access to a user's content logs. Only the owning user
+       *              can perform any action on their content logs.
+       * @path        /users/{userId}/contentLogs/{contentLogId}
+       * @allow       (get) The owner reads one of their content logs.
+       *              auth.uid: "user_abc", path: "/users/user_abc/contentLogs/log_123"
+       * @deny        (create) A user tries to create a content log for someone else.
+       *              auth.uid: "user_xyz", path: "/users/user_abc/contentLogs/log_456"
+       * @principle   Restricts access to a user's own data tree using path-based
+       *              ownership.
+       */
+      match /contentLogs/{contentLogId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isUserOwnedDoc(userId);
+        allow update: if isExistingOwner(userId) && userIdIsImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Controls access to a user's content calendar. Only the owning
+       *              user can perform any action on their calendar entries.
+       * @path        /users/{userId}/contentCalendarEntries/{contentCalendarEntryId}
+       * @allow       (delete) The owner deletes a calendar entry.
+       *              auth.uid: "user_abc", path: "/users/user_abc/contentCalendarEntries/entry_123"
+       * @deny        (update) A user tries to update another's calendar entry.
+       *              auth.uid: "user_xyz", path: "/users/user_abc/contentCalendarEntries/entry_123"
+       * @principle   Restricts access to a user's own data tree using path-based
+       *              ownership.
+       */
+      match /contentCalendarEntries/{contentCalendarEntryId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isUserOwnedDoc(userId);
+        allow update: if isExistingOwner(userId) && userIdIsImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    // Global Data Rules
+    // --------------------------------
+
+    /**
+     * @description Controls access to global trends. This data is intended to be
+     *              publicly readable by any user, but writes are restricted.
+     * @path        /trends/{trendId}
+     * @allow       (list) Any user (signed in or not) lists all trends.
+     *              auth.uid: null, path: "/trends"
+     * @deny        (create) An authenticated user tries to create a new trend.
+     *              auth.uid: "user_abc", path: "/trends/new_trend"
+     * @principle   Provides public read access for global data while restricting writes
+     *              to prevent unauthorized modification.
+     */
+    match /trends/{trendId} {
+      allow get, list: if true;
+      // CRITICAL: Cannot implement admin-only writes. The 'Trend' entity is missing an 'ownerId' or 'authorId' field.
+      // Writes are disabled until the schema is updated to support an authorization check.
+      allow create, update, delete: if false; // TODO: Add admin validation once an admin role system or ownership field is implemented.
+    }
+
+    // Shared Data Rules
+    // --------------------------------
+    
+    /**
+     * Checks if the requesting user is the one who created the suggestion.
+     */
+    function isRequestingUser() {
+      return isSignedIn() && resource.data.requestingUserId == request.auth.uid;
+    }
+    
+    /**
+     * Checks if the requesting user is the one who was suggested for collaboration.
+     */
+    function isSuggestedUser() {
+      return isSignedIn() && resource.data.suggestedUserId == request.auth.uid;
+    }
+    
+    /**
+     * Checks if the requesting user is one of the two parties involved.
+     */
+    function isParticipant() {
+      return isSignedIn() && (request.auth.uid == resource.data.requestingUserId || request.auth.uid == resource.data.suggestedUserId);
+    }
+    
+    /**
+     * Enforces immutability of the participants in a suggestion.
+     */
+    function participantsAreImmutable() {
+      return request.resource.data.requestingUserId == resource.data.requestingUserId && request.resource.data.suggestedUserId == resource.data.suggestedUserId;
+    }
+
+    /**
+     * @description Controls access to collaboration suggestions. Only the involved
+     *              users can read. The creator can create/delete. The recipient
+     *              can update (e.g., to change status).
+     * @path        /collaborationSuggestions/{collaborationSuggestionId}
+     * @allow       (get) The suggested user reads a pending request.
+     *              auth.uid: "suggested_user", path: "/collaborationSuggestions/sugg_123"
+     * @deny        (get) A third-party user tries to read the suggestion.
+     *              auth.uid: "random_user", path: "/collaborationSuggestions/sugg_123"
+     * @principle   Implements a closed-collaborator model where access is granted only
+     *              to users explicitly named in the document.
+     */
+    match /collaborationSuggestions/{collaborationSuggestionId} {
+      allow get: if isSignedIn() && isParticipant();
+      allow list: if false; // Deny general listing to protect privacy. Clients must query by userId.
+      allow create: if isSignedIn() && request.resource.data.requestingUserId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && isSuggestedUser() && participantsAreImmutable();
+      allow delete: if isSignedIn() && resource != null && isRequestingUser();
+    }
+  }
+}

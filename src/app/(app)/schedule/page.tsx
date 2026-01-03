@@ -1,21 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
-
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
+import { format, addMonths, subMonths } from "date-fns";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import {
+  ChevronLeft,
+  ChevronRight,
   Activity,
   Lightbulb,
   Tag,
@@ -23,6 +12,18 @@ import {
   FileText,
   Calendar as CalendarIcon,
 } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Mock data representing a week's worth of scheduled content
 const scheduledContent = [
@@ -64,26 +65,18 @@ const scheduledContent = [
 type ScheduledPost = (typeof scheduledContent)[0];
 
 export default function SchedulePage() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [
-    selectedContent,
-    setSelectedContent,
-  ] = useState<ScheduledPost | undefined>(
-    scheduledContent.find(
-      (d) => format(d.date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")
-    )
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
+  const selectedContent = scheduledContent.find(
+    (d) => selectedDate && format(d.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
   );
 
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    setDate(selectedDate);
-    if (!selectedDate) {
-      setSelectedContent(undefined);
-      return;
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
     }
-    const contentForDate = scheduledContent.find(
-      (d) => format(d.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
-    );
-    setSelectedContent(contentForDate);
   };
 
   const scheduledDays = scheduledContent.map((item) => item.date);
@@ -103,11 +96,38 @@ export default function SchedulePage() {
         <div className="lg:col-span-1">
           <Card>
             <CardContent className="p-0">
-              <Calendar
+               <Calendar
                 mode="single"
-                selected={date}
+                selected={selectedDate}
                 onSelect={handleDateSelect}
+                month={currentMonth}
+                onMonthChange={setCurrentMonth}
                 className="w-full"
+                components={{
+                  Caption: ({ displayMonth }) => (
+                    <div className="flex items-center justify-between px-4 py-2">
+                       <h2 className="text-lg font-semibold">{format(displayMonth, 'MMMM yyyy')}</h2>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ),
+                }}
                 modifiers={{ scheduled: scheduledDays }}
                 modifiersStyles={{
                   scheduled: {
@@ -128,8 +148,8 @@ export default function SchedulePage() {
                 Daily Dose of Post Analysis
               </CardTitle>
               <CardDescription>
-                {date
-                  ? `Analysis for ${format(date, "PPP")}`
+                {selectedDate
+                  ? `Analysis for ${format(selectedDate, "PPP")}`
                   : "Select a date to see the analysis"}
               </CardDescription>
             </CardHeader>
@@ -196,10 +216,10 @@ export default function SchedulePage() {
                 <div className="flex h-[300px] flex-col items-center justify-center rounded-lg border border-dashed text-center">
                   <Activity className="h-10 w-10 text-muted-foreground/50" />
                   <h3 className="mt-4 text-lg font-semibold">
-                    {date ? "No Content Scheduled" : "Select a Day"}
+                    {selectedDate ? "No Content Scheduled" : "Select a Day"}
                   </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {date
+                    {selectedDate
                       ? "There's no post analysis for this day."
                       : "Pick a date from the calendar to see the analysis."}
                   </p>

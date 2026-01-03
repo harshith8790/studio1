@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import { Manrope } from 'next/font/google'
 import { cn } from '@/lib/utils';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'Content Spark',
@@ -36,7 +37,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
+          <FirebaseClientProvider>
             {children}
+          </FirebaseClientProvider>
             <Toaster />
         </ThemeProvider>
       </body>

@@ -11,18 +11,7 @@ export default function LandingPage() {
     <div className="relative min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <Stars />
       <header className="fixed top-0 left-0 right-0 z-50 flex h-20 items-center justify-center px-4 sm:px-8 md:px-16 bg-background/80 backdrop-blur-sm">
-        <div className="absolute left-4 sm:left-8 md:left-16">
-          {/* Intentionally blank */}
-        </div>
         <Logo />
-        <div className="absolute right-4 sm:right-8 md:right-16 flex items-center gap-2">
-          <Button variant="ghost" asChild>
-             <Link href="/dashboard">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/signup">Signup</Link>
-          </Button>
-        </div>
       </header>
 
       <main className="container mx-auto px-4 pt-32 sm:pt-40">

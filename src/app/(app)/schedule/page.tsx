@@ -11,6 +11,8 @@ import {
   Target,
   FileText,
   Calendar as CalendarIcon,
+  Save,
+  Loader2,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +26,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data representing a week's worth of scheduled content
 const scheduledContent = [
@@ -37,6 +42,7 @@ const scheduledContent = [
     strategicRationale:
       "Builds authority and provides value by teaching a skill. The BTS format fosters a stronger connection with the audience.",
     growthGoal: "Engagement",
+    notes: "Remember to add a call-to-action to the comments.",
   },
   {
     date: new Date(2024, 6, 24),
@@ -48,6 +54,7 @@ const scheduledContent = [
     strategicRationale:
       "Positions you as a forward-thinker in the industry. LinkedIn is ideal for professional topics and encourages thoughtful comments.",
     growthGoal: "Reach",
+    notes: ""
   },
   {
     date: new Date(2024, 6, 26),
@@ -59,6 +66,7 @@ const scheduledContent = [
     strategicRationale:
       "A low-effort, high-engagement post. The poll encourages interaction and provides valuable audience research for future content.",
     growthGoal: "Engagement",
+    notes: ""
   },
 ];
 
@@ -67,17 +75,35 @@ type ScheduledPost = (typeof scheduledContent)[0];
 export default function SchedulePage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
   
   const selectedContent = scheduledContent.find(
     (d) => selectedDate && format(d.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
   );
 
+  const [notes, setNotes] = useState(selectedContent?.notes || "");
+
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     if (date) {
       setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+      const content = scheduledContent.find(d => format(d.date, "yyyy-MM-dd") === format(date, "yyyy-MM-dd"));
+      setNotes(content?.notes || "");
     }
   };
+
+  const handleSaveNotes = async () => {
+    setIsSaving(true);
+    // Mock saving notes
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log("Saving notes for", selectedDate, ":", notes);
+    toast({
+        title: "Notes Saved!",
+        description: `Your notes for ${selectedDate ? format(selectedDate, "PPP") : ""} have been saved.`,
+    });
+    setIsSaving(false);
+  }
 
   const scheduledDays = scheduledContent.map((item) => item.date);
 
@@ -141,7 +167,7 @@ export default function SchedulePage() {
         </div>
 
         <div className="lg:col-span-2">
-          <Card className="min-h-[445px]">
+          <Card className="min-h-[445px] flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarIcon className="h-5 w-5 text-primary" />
@@ -153,7 +179,7 @@ export default function SchedulePage() {
                   : "Select a date to see the analysis"}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-grow flex flex-col">
               {selectedContent ? (
                 <ScrollArea className="h-[300px] pr-4">
                   <div className="space-y-6">
@@ -213,7 +239,7 @@ export default function SchedulePage() {
                   </div>
                 </ScrollArea>
               ) : (
-                <div className="flex h-[300px] flex-col items-center justify-center rounded-lg border border-dashed text-center">
+                <div className="flex h-full flex-col items-center justify-center rounded-lg border border-dashed text-center">
                   <Activity className="h-10 w-10 text-muted-foreground/50" />
                   <h3 className="mt-4 text-lg font-semibold">
                     {selectedDate ? "No Content Scheduled" : "Select a Day"}
@@ -226,6 +252,25 @@ export default function SchedulePage() {
                 </div>
               )}
             </CardContent>
+            <div className="p-6 pt-0">
+                <Separator className="my-4" />
+                <div className="space-y-2">
+                    <label htmlFor="notes" className="text-sm font-medium">Notes for this day</label>
+                    <Textarea 
+                        id="notes"
+                        placeholder="Add your notes, ideas, or to-dos here..." 
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        disabled={!selectedDate}
+                    />
+                </div>
+                <div className="flex justify-end mt-4">
+                    <Button onClick={handleSaveNotes} disabled={!selectedDate || isSaving}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Notes
+                    </Button>
+                </div>
+            </div>
           </Card>
         </div>
       </div>
